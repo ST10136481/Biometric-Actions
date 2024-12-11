@@ -24,4 +24,4 @@
         <!-- Error colors -->
         <item name="colorError">@color/error</item>
     </style>
-</resources>
+</resources> 
