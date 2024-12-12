@@ -3,7 +3,7 @@
     <style name="Theme.BiometricActions" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorOnPrimary">@color/on_primary</item>
         <item name="colorPrimaryContainer">@color/primary_container</item>
         <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
@@ -11,6 +11,7 @@
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/secondary</item>
         <item name="colorSecondaryVariant">@color/secondary_dark</item>
+        <item name="colorOnSecondary">@color/black</item>
 
         <!-- Status bar color. -->
         <item name="android:statusBarColor">@color/primary_dark</item>
@@ -23,5 +24,6 @@
 
         <!-- Error colors -->
         <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/white</item>
     </style>
 </resources> 

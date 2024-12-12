@@ -14,5 +14,6 @@
     <color name="error">#FFB00020</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="scrim">#99000000</color>
     <color name="ic_launcher_background">#FFFFFF</color>
 </resources>
