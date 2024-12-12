@@ -1,83 +1,98 @@
 package com.example.biometricactions
 
+import android.app.AlertDialog
+import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.appcompat.widget.Toolbar
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.core.content.ContextCompat
+import com.example.biometricactions.fragment.SettingsFragment
+import com.example.biometricactions.service.BiometricAccessibilityService
+import com.example.biometricactions.HomeFragment
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var navController: NavController
-    private lateinit var appBarConfiguration: AppBarConfiguration
-    private var isDarkMode = false
+    private lateinit var biometricManager: BiometricManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize theme state
-        isDarkMode = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
-
-        // Set up the toolbar
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
-
-        // Set up Navigation
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        navController = navHostFragment.navController
-
-        // Configure the ActionBar
-        appBarConfiguration = AppBarConfiguration(
-            setOf(R.id.homeFragment) // Set HomeFragment as top-level destination
-        )
-        setupActionBarWithNavController(navController, appBarConfiguration)
+        biometricManager = BiometricManager.from(this)
+        checkBiometricAvailability()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        updateThemeIcon(menu.findItem(R.id.action_theme))
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_theme -> {
-                toggleTheme()
-                updateThemeIcon(item)
-                true
+    private fun checkBiometricAvailability() {
+        when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
+            BiometricManager.BIOMETRIC_SUCCESS -> {
+                if (isAccessibilityServiceEnabled()) {
+                    showHomeFragment()
+                } else {
+                    showAccessibilitySetup()
+                }
             }
-            R.id.action_settings -> {
-                // TODO: Navigate to settings
-                true
+            else -> {
+                showBiometricErrorDialog()
             }
-            else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun toggleTheme() {
-        isDarkMode = !isDarkMode
-        val newMode = if (isDarkMode) {
-            AppCompatDelegate.MODE_NIGHT_YES
-        } else {
-            AppCompatDelegate.MODE_NIGHT_NO
+    private fun showBiometricErrorDialog() {
+        // Add blur effect to background
+        window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+        window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, R.color.scrim)))
+
+        AlertDialog.Builder(this)
+            .setTitle("Biometric Authentication Required")
+            .setMessage("This app requires fingerprint authentication. Please set up fingerprint authentication in your device settings.")
+            .setCancelable(false)
+            .show()
+
+        // Close app after 5 seconds
+        Handler(Looper.getMainLooper()).postDelayed({
+            finish()
+        }, 5000)
+    }
+
+    private fun showHomeFragment() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, HomeFragment())
+            .commit()
+    }
+
+    private fun showAccessibilitySetup() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, SettingsFragment())
+            .commit()
+    }
+
+    private fun isAccessibilityServiceEnabled(): Boolean {
+        val accessibilityEnabled = try {
+            Settings.Secure.getInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
+        } catch (e: Settings.SettingNotFoundException) {
+            0
         }
-        AppCompatDelegate.setDefaultNightMode(newMode)
+
+        if (accessibilityEnabled == 1) {
+            val service = "${packageName}/${BiometricAccessibilityService::class.java.name}"
+            val settingValue = Settings.Secure.getString(
+                contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            )
+            return settingValue?.contains(service) == true
+        }
+        return false
     }
 
-    private fun updateThemeIcon(menuItem: MenuItem) {
-        menuItem.setIcon(
-            if (isDarkMode) R.drawable.ic_dark_mode else R.drawable.ic_light_mode
-        )
-    }
-
-    override fun onSupportNavigateUp(): Boolean {
-        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    override fun onResume() {
+        super.onResume()
+        if (isAccessibilityServiceEnabled()) {
+            showHomeFragment()
+        }
     }
 }
