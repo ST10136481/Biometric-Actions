@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "1046530093127",
+    "firebase_url": "https://sso-practice-e35d9-default-rtdb.firebaseio.com",
+    "project_id": "sso-practice-e35d9",
+    "storage_bucket": "sso-practice-e35d9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046530093127:android:1e38bc4268d914c85e0162",
+        "android_client_info": {
+          "package_name": "com.example.biometricactions"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3BQBBrRjTa98uuAkIZqxEdbPBOlLKwmE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046530093127:android:14471a2c4ad6b44d5e0162",
+        "android_client_info": {
+          "package_name": "com.example.ssoimplementation"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3BQBBrRjTa98uuAkIZqxEdbPBOlLKwmE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046530093127:android:e0de65048601abab5e0162",
+        "android_client_info": {
+          "package_name": "opsc7312.foragers"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3BQBBrRjTa98uuAkIZqxEdbPBOlLKwmE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

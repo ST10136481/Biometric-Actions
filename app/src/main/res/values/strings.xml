@@ -1,3 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Biometric Actions</string>
+    <string name="app_name">BiometricActions</string>
+    <string name="accessibility_service_label">Biometric Actions Service</string>
+    <string name="accessibility_service_description">This service is required to detect fingerprint
+        gestures and perform actions based on them.</string>
 </resources>
