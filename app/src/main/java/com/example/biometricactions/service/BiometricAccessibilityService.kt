@@ -42,12 +42,19 @@ class BiometricAccessibilityService : AccessibilityService() {
         preferencesManager = PreferencesManager(this)
         fingerprintManager = getSystemService(FingerprintManager::class.java)
         
-        startFingerprintScanning()
+        if (preferencesManager.isBiometricsEnabled()) {
+            startFingerprintScanning()
+        }
         Log.d(TAG, "BiometricAccessibilityService connected")
         showToast("Fingerprint Service Connected")
     }
 
     private fun startFingerprintScanning() {
+        if (!preferencesManager.isBiometricsEnabled()) {
+            Log.d(TAG, "Biometrics not enabled, skipping scan start")
+            return
+        }
+
         if (isScanning) {
             stopFingerprintScanning()
         }
