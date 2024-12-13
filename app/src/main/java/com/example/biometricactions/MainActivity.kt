@@ -8,55 +8,98 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import com.example.biometricactions.fragment.SettingsFragment
 import com.example.biometricactions.service.BiometricAccessibilityService
-import com.example.biometricactions.HomeFragment
+import java.util.concurrent.Executor
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var biometricManager: BiometricManager
+    private lateinit var executor: Executor
+    private lateinit var biometricPrompt: BiometricPrompt
+    private lateinit var promptInfo: BiometricPrompt.PromptInfo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        biometricManager = BiometricManager.from(this)
+        setupBiometricAuth()
         checkBiometricAvailability()
     }
 
-    private fun checkBiometricAvailability() {
-        when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
-            BiometricManager.BIOMETRIC_SUCCESS -> {
-                if (isAccessibilityServiceEnabled()) {
-                    showHomeFragment()
-                } else {
-                    showAccessibilitySetup()
+    private fun setupBiometricAuth() {
+        executor = ContextCompat.getMainExecutor(this)
+        biometricPrompt = BiometricPrompt(this, executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    showToast("Authentication error: $errString")
+                    if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                        finish()
+                    }
                 }
+
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    showToast("Authentication succeeded!")
+                    if (isAccessibilityServiceEnabled()) {
+                        showHomeFragment()
+                    } else {
+                        showAccessibilitySetup()
+                    }
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                    showToast("Authentication failed")
+                }
+            })
+
+        promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Biometric Authentication")
+            .setSubtitle("Log in using your biometric credential")
+            .setNegativeButtonText("Cancel")
+            .build()
+    }
+
+    private fun checkBiometricAvailability() {
+        val biometricManager = BiometricManager.from(this)
+        when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
+            BiometricManager.BIOMETRIC_SUCCESS -> {
+                biometricPrompt.authenticate(promptInfo)
+            }
+            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
+                showBiometricErrorDialog("No biometric features available on this device")
+            }
+            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> {
+                showBiometricErrorDialog("Biometric features are currently unavailable")
+            }
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
+                showBiometricErrorDialog("No biometric credentials enrolled")
             }
             else -> {
-                showBiometricErrorDialog()
+                showBiometricErrorDialog("Biometric authentication not available")
             }
         }
     }
 
-    private fun showBiometricErrorDialog() {
-        // Add blur effect to background
+    private fun showBiometricErrorDialog(message: String) {
         window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
         window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, R.color.scrim)))
 
         AlertDialog.Builder(this)
             .setTitle("Biometric Authentication Required")
-            .setMessage("This app requires fingerprint authentication. Please set up fingerprint authentication in your device settings.")
+            .setMessage(message)
             .setCancelable(false)
+            .setPositiveButton("OK") { _, _ -> finish() }
             .show()
+    }
 
-        // Close app after 5 seconds
-        Handler(Looper.getMainLooper()).postDelayed({
-            finish()
-        }, 5000)
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     private fun showHomeFragment() {
