@@ -42,19 +42,12 @@ class BiometricAccessibilityService : AccessibilityService() {
         preferencesManager = PreferencesManager(this)
         fingerprintManager = getSystemService(FingerprintManager::class.java)
         
-        if (preferencesManager.isBiometricsEnabled()) {
-            startFingerprintScanning()
-        }
-        Log.d(TAG, "BiometricAccessibilityService connected")
+        preferencesManager.setBiometricsEnabled(true)
+        startFingerprintScanning()
         showToast("Fingerprint Service Connected")
     }
 
     private fun startFingerprintScanning() {
-        if (!preferencesManager.isBiometricsEnabled()) {
-            Log.d(TAG, "Biometrics not enabled, skipping scan start")
-            return
-        }
-
         if (isScanning) {
             stopFingerprintScanning()
         }
@@ -70,10 +63,12 @@ class BiometricAccessibilityService : AccessibilityService() {
                 authenticationCallback,
                 handler  // Use handler for callbacks
             )
-            Log.d(TAG, "Started fingerprint scanning")
+            showToast("Started fingerprint scanning")
         } catch (e: Exception) {
             Log.e(TAG, "Error starting fingerprint scanning", e)
             isScanning = false
+            // Try to restart scanning after error
+            handler.postDelayed({ startFingerprintScanning() }, 1000)
         }
     }
 
@@ -86,7 +81,7 @@ class BiometricAccessibilityService : AccessibilityService() {
     private val authenticationCallback = object : FingerprintManager.AuthenticationCallback() {
         override fun onAuthenticationSucceeded(result: FingerprintManager.AuthenticationResult?) {
             super.onAuthenticationSucceeded(result)
-            Log.d(TAG, "Authentication succeeded")
+            showToast("Tap detected")
             handler.post {
                 onEvent(EventType.SingleTap)
                 // Restart scanning after a short delay
@@ -96,7 +91,7 @@ class BiometricAccessibilityService : AccessibilityService() {
 
         override fun onAuthenticationHelp(helpCode: Int, helpString: CharSequence?) {
             super.onAuthenticationHelp(helpCode, helpString)
-            Log.d(TAG, "Authentication help: $helpString")
+            showToast("Swipe detected")
             handler.post {
                 onEvent(EventType.FastSwipe)
                 // Restart scanning after a short delay
@@ -106,17 +101,14 @@ class BiometricAccessibilityService : AccessibilityService() {
 
         override fun onAuthenticationFailed() {
             super.onAuthenticationFailed()
-            Log.d(TAG, "Authentication failed")
             handler.post {
-                onEvent(EventType.Unregistered)
-                // Restart scanning immediately for failed attempts
+                onEvent(EventType.SingleTap) // Treat failed auth as single tap
                 startFingerprintScanning()
             }
         }
 
         override fun onAuthenticationError(errorCode: Int, errString: CharSequence?) {
             super.onAuthenticationError(errorCode, errString)
-            Log.d(TAG, "Authentication error: $errString")
             isScanning = false
             // Restart scanning after error with a delay
             handler.postDelayed({ startFingerprintScanning() }, 1000)
@@ -124,13 +116,6 @@ class BiometricAccessibilityService : AccessibilityService() {
     }
 
     private fun onEvent(event: EventType) {
-        Log.d(TAG, "Event detected: ${event.name}")
-
-        if (!preferencesManager.isBiometricsEnabled()) {
-            showToast("Biometrics not enabled")
-            return
-        }
-
         val currentTime = System.currentTimeMillis()
         
         when (event) {
@@ -165,7 +150,7 @@ class BiometricAccessibilityService : AccessibilityService() {
         val action = preferencesManager.getAction(PreferencesManager.SINGLE_TAP_KEY)
         action?.let { 
             executeAction(it)
-            showToast("Executing Single Tap Action: ${it.displayName}")
+            showToast("Single Tap: ${it.displayName}")
         } ?: showToast("No action set for Single Tap")
     }
 
@@ -173,7 +158,7 @@ class BiometricAccessibilityService : AccessibilityService() {
         val action = preferencesManager.getAction(PreferencesManager.DOUBLE_TAP_KEY)
         action?.let { 
             executeAction(it)
-            showToast("Executing Double Tap Action: ${it.displayName}")
+            showToast("Double Tap: ${it.displayName}")
         } ?: showToast("No action set for Double Tap")
     }
 
@@ -181,7 +166,7 @@ class BiometricAccessibilityService : AccessibilityService() {
         val action = preferencesManager.getAction(PreferencesManager.LONG_PRESS_KEY)
         action?.let { 
             executeAction(it)
-            showToast("Executing Long Press Action: ${it.displayName}")
+            showToast("Long Press: ${it.displayName}")
         } ?: showToast("No action set for Long Press")
     }
 
@@ -189,9 +174,9 @@ class BiometricAccessibilityService : AccessibilityService() {
         val intent = Intent(this, DeviceActionService::class.java).apply {
             this.action = "com.example.biometricactions.EXECUTE_ACTION"
             putExtra("action_id", action.id)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startService(intent)
-        Log.d(TAG, "Executing action: ${action.displayName}")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
@@ -199,7 +184,6 @@ class BiometricAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() {
-        Log.d(TAG, "BiometricAccessibilityService interrupted")
         stopFingerprintScanning()
     }
 
@@ -209,7 +193,9 @@ class BiometricAccessibilityService : AccessibilityService() {
     }
 
     private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        handler.post {
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     companion object {

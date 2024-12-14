@@ -6,7 +6,7 @@ import android.content.Intent
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
 import android.os.IBinder
-import android.util.Log
+import android.widget.Toast
 import com.example.biometricactions.util.PreferencesManager
 
 class DeviceActionService : Service() {
@@ -30,7 +30,7 @@ class DeviceActionService : Service() {
                 PreferencesManager.Action.TOGGLE_SILENT_MODE -> toggleSilentMode()
                 PreferencesManager.Action.OPEN_CAMERA -> openCamera()
                 PreferencesManager.Action.TAKE_SCREENSHOT -> takeScreenshot()
-                else -> Log.d(TAG, "Unknown action ID: $actionId")
+                else -> showToast("Unknown action")
             }
         }
         return START_NOT_STICKY
@@ -41,9 +41,9 @@ class DeviceActionService : Service() {
             val cameraId = cameraManager.cameraIdList[0]
             isFlashlightOn = !isFlashlightOn
             cameraManager.setTorchMode(cameraId, isFlashlightOn)
-            Log.d(TAG, "Flashlight ${if (isFlashlightOn) "on" else "off"}")
+            showToast("Flashlight ${if (isFlashlightOn) "on" else "off"}")
         } catch (e: Exception) {
-            Log.e(TAG, "Error toggling flashlight", e)
+            showToast("Failed to toggle flashlight")
         }
     }
 
@@ -56,32 +56,31 @@ class DeviceActionService : Service() {
                 AudioManager.RINGER_MODE_NORMAL
             }
             audioManager.ringerMode = newMode
-            Log.d(TAG, "Ringer mode changed to: $newMode")
+            showToast("Ringer mode: ${if (newMode == AudioManager.RINGER_MODE_SILENT) "Silent" else "Normal"}")
         } catch (e: Exception) {
-            Log.e(TAG, "Error toggling silent mode", e)
+            showToast("Failed to toggle silent mode")
         }
     }
 
     private fun openCamera() {
         try {
-            val intent = Intent("android.media.action.STILL_IMAGE_CAMERA")
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            val intent = Intent("android.media.action.STILL_IMAGE_CAMERA").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
             startActivity(intent)
-            Log.d(TAG, "Camera opened")
+            showToast("Opening camera")
         } catch (e: Exception) {
-            Log.e(TAG, "Error opening camera", e)
+            showToast("Failed to open camera")
         }
     }
 
     private fun takeScreenshot() {
-        // This requires root access or system permissions
-        // For now, just log that it's not implemented
-        Log.d(TAG, "Screenshot functionality not implemented")
+        showToast("Screenshot not implemented")
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-
-    companion object {
-        private const val TAG = "DeviceActionService"
-    }
 } 
