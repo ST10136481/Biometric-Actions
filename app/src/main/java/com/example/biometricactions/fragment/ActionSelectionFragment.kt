@@ -50,7 +50,7 @@ class ActionSelectionFragment : Fragment() {
         // Get currently selected action ID
         val currentActionId = actionKey?.let { key ->
             preferencesManager.getAction(key)?.id
-        } ?: -1
+        } ?: 0 // Default to NO_ACTION (id = 0)
 
         // Initialize adapter with click handler and current selection
         actionAdapter = ActionAdapter(
@@ -67,7 +67,6 @@ class ActionSelectionFragment : Fragment() {
 
         // Load available actions
         val actions = PreferencesManager.Action.values()
-            .filter { it != PreferencesManager.Action.NONE }
             .map { action ->
                 ActionAdapter.ActionItem(
                     id = action.id,
@@ -80,11 +79,11 @@ class ActionSelectionFragment : Fragment() {
 
     private fun getActionDescription(action: PreferencesManager.Action): String {
         return when (action) {
+            PreferencesManager.Action.NO_ACTION -> "Disable this gesture"
             PreferencesManager.Action.TOGGLE_FLASHLIGHT -> "Turn flashlight on/off"
             PreferencesManager.Action.OPEN_CAMERA -> "Launch camera app"
             PreferencesManager.Action.TOGGLE_SILENT_MODE -> "Toggle silent mode"
             PreferencesManager.Action.TAKE_SCREENSHOT -> "Take a screenshot"
-            PreferencesManager.Action.NONE -> "No action assigned"
         }
     }
 

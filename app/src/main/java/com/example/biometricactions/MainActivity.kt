@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
     private lateinit var authSessionManager: AuthSessionManager
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,6 +147,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Check if accessibility was just enabled
+        if (isAccessibilityServiceEnabled()) {
+            showHomeFragment()
+            return
+        }
+        // Otherwise check authentication
         if (!authSessionManager.isSessionValid()) {
             checkBiometricAvailability()
         }

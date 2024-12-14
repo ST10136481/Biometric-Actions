@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.biometricactions" />
+                  <option name="mobileSdkAppId" value="1:1046530093127:android:1e38bc4268d914c85e0162" />
+                  <option name="projectId" value="sso-practice-e35d9" />
+                  <option name="projectNumber" value="1046530093127" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

@@ -33,10 +33,16 @@ class PreferencesManager(context: Context) {
     }
 
     enum class Action(val id: Int, val displayName: String) {
+        NO_ACTION(0, "No Action"),
         TOGGLE_FLASHLIGHT(1, "Toggle Flashlight"),
         OPEN_CAMERA(2, "Open Camera"),
         TOGGLE_SILENT_MODE(3, "Toggle Silent Mode"),
-        TAKE_SCREENSHOT(4, "Take Screenshot"),
-        NONE(-1, "None");
+        TAKE_SCREENSHOT(4, "Take Screenshot");
+
+        companion object {
+            fun getDefaultAction(key: String): Action {
+                return NO_ACTION
+            }
+        }
     }
 } 
