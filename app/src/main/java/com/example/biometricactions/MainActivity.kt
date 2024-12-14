@@ -15,17 +15,20 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import com.example.biometricactions.fragment.SettingsFragment
 import com.example.biometricactions.service.BiometricAccessibilityService
+import com.example.biometricactions.util.AuthSessionManager
 import java.util.concurrent.Executor
 
 class MainActivity : AppCompatActivity() {
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
+    private lateinit var authSessionManager: AuthSessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        authSessionManager = AuthSessionManager(this)
         setupBiometricAuth()
         checkBiometricAvailability()
     }
@@ -45,6 +48,7 @@ class MainActivity : AppCompatActivity() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     showToast("Authentication succeeded!")
+                    authSessionManager.startSession()
                     if (isAccessibilityServiceEnabled()) {
                         showHomeFragment()
                     } else {
@@ -69,7 +73,15 @@ class MainActivity : AppCompatActivity() {
         val biometricManager = BiometricManager.from(this)
         when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
             BiometricManager.BIOMETRIC_SUCCESS -> {
-                biometricPrompt.authenticate(promptInfo)
+                if (!authSessionManager.isSessionValid()) {
+                    biometricPrompt.authenticate(promptInfo)
+                } else {
+                    if (isAccessibilityServiceEnabled()) {
+                        showHomeFragment()
+                    } else {
+                        showAccessibilitySetup()
+                    }
+                }
             }
             BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
                 showBiometricErrorDialog("No biometric features available on this device")
@@ -134,8 +146,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (isAccessibilityServiceEnabled()) {
-            showHomeFragment()
+        if (!authSessionManager.isSessionValid()) {
+            checkBiometricAvailability()
         }
     }
 }
