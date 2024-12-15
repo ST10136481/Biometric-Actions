@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.BiometricActions" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Enable window animations -->
+        <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
+
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
@@ -25,5 +28,11 @@
         <!-- Error colors -->
         <item name="colorError">@color/error</item>
         <item name="colorOnError">@color/white</item>
+    </style>
+
+    <!-- Animation for theme switching -->
+    <style name="WindowAnimationTransition">
+        <item name="android:windowEnterAnimation">@anim/fade_in</item>
+        <item name="android:windowExitAnimation">@anim/fade_out</item>
     </style>
 </resources>

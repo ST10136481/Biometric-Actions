@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
+import com.example.biometricactions.service.DeviceActionService
 import com.example.biometricactions.util.PreferencesManager
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -35,16 +37,8 @@ class FingerprintEventReceiver : BroadcastReceiver() {
             }
             "FINGER_UP" -> {
                 val pressDuration = currentTime - lastDownTime
-                if (!isLongPress) {
-                    if (pressDuration < DOUBLE_TAP_WINDOW && lastDownTime - lastTapTime < DOUBLE_TAP_WINDOW) {
-                        // Double tap detected
-                        handleAction(context, preferencesManager, ActionType.DOUBLE_TAP)
-                        lastTapTime = 0
-                    } else {
-                        // Single tap detected
-                        handleAction(context, preferencesManager, ActionType.SINGLE_TAP)
-                        lastTapTime = currentTime
-                    }
+                if (!isLongPress && pressDuration < LONG_PRESS_DURATION) {
+                    handleAction(context, preferencesManager, ActionType.SINGLE_TAP)
                 }
             }
         }
@@ -56,16 +50,28 @@ class FingerprintEventReceiver : BroadcastReceiver() {
     private fun handleAction(context: Context, preferencesManager: PreferencesManager, actionType: ActionType) {
         val actionKey = when (actionType) {
             ActionType.SINGLE_TAP -> PreferencesManager.SINGLE_TAP_KEY
-            ActionType.DOUBLE_TAP -> PreferencesManager.DOUBLE_TAP_KEY
             ActionType.LONG_PRESS -> PreferencesManager.LONG_PRESS_KEY
         }
 
         val action = preferencesManager.getAction(actionKey)
-        action?.let {
-            // Send broadcast to BiometricAccessibilityService to execute the action
-            val actionIntent = Intent("com.example.biometricactions.EXECUTE_ACTION")
-            actionIntent.putExtra("action_id", it.id)
-            context.sendBroadcast(actionIntent)
+        if (action == PreferencesManager.Action.NO_ACTION) {
+            showToast(context, "${actionType.name.lowercase()} - No action set")
+            return
+        }
+        
+        // Send intent to DeviceActionService to execute the action
+        val actionIntent = Intent(context, DeviceActionService::class.java).apply {
+            this.action = "com.example.biometricactions.EXECUTE_ACTION"
+            putExtra("action_id", action?.id)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startService(actionIntent)
+        showToast(context, "Executing ${actionType.name.lowercase()} action: ${action?.displayName}")
+    }
+
+    private fun showToast(context: Context, message: String) {
+        handler.post {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -89,13 +95,10 @@ class FingerprintEventReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "FingerprintEventReceiver"
         private const val LONG_PRESS_DURATION = 500L
-        private const val DOUBLE_TAP_WINDOW = 300L
-        private var lastTapTime: Long = 0
     }
 
     enum class ActionType {
         SINGLE_TAP,
-        DOUBLE_TAP,
         LONG_PRESS
     }
 } 

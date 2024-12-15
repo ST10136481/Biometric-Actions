@@ -11,25 +11,15 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
+        android:gravity="end"
         android:background="?attr/colorPrimaryContainer">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonLightTheme"
-            android:layout_width="0dp"
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/themeSwitch"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:text="Light Theme"
-            app:icon="@drawable/ic_light_mode" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/buttonDarkTheme"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:text="Dark Theme"
-            app:icon="@drawable/ic_dark_mode" />
+            app:thumbIcon="@drawable/ic_dark_mode"
+            app:thumbIconTint="?attr/colorControlNormal" />
 
     </LinearLayout>
 
@@ -102,10 +92,17 @@
                         android:id="@+id/textDoubleTapAction"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="No action selected"
-                        android:textAppearance="?attr/textAppearanceBody2"
-                        android:textColor="?android:attr/textColorSecondary" />
+                        android:layout_marginStart="16dp"
+                        android:text="Shake: No Action"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Shake your phone 5 times to trigger action"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/darker_gray" />
 
                 </LinearLayout>
 
